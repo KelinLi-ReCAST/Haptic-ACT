@@ -1,0 +1,327 @@
+from mujoco_py import MjSim, MjViewer, load_model_from_path
+import numpy as np
+from scipy.spatial.transform import Rotation as R
+import glfw
+from mujoco_py import const
+from enum import Enum
+import sys
+import os
+SENSEGLOVE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "senseglove")
+sys.path.append(SENSEGLOVE_DIR)
+import sg
+import ctypes
+
+np.set_printoptions(suppress=True)
+joints = np.zeros(21)
+dll = ctypes.cdll.LoadLibrary
+glove = dll(os.path.join(SENSEGLOVE_DIR, 'lib', 'libsenseglove.so')) 
+glove.get_hand_joints.restype = ctypes.POINTER(ctypes.c_int * 21)
+ax = []
+ay = []
+plot_flag = False
+
+def rotation(theta_x=0, theta_y=0, theta_z=0):
+
+    rot_x = np.array([[1, 0, 0],[0, np.cos(theta_x), - np.sin(theta_x)], [0, np.sin(theta_x), np.cos(theta_x)]])
+    rot_y = np.array([[np.cos(theta_y), 0, np.sin(theta_y)],[0, 1, 0], [-np.sin(theta_y), 0, np.cos(theta_y)]])
+    rot_z = np.array([[np.cos(theta_z), - np.sin(theta_z), 0],[ np.sin(theta_z), np.cos(theta_z), 0], [0, 0, 1]])
+    R = rot_x.dot(rot_y).dot(rot_z)
+
+    return R
+
+def quat2euler(quat):
+    # transfer quat to euler
+    r = R.from_quat(np.array([quat[1], quat[2], quat[3], quat[0]]))
+    return r.as_euler('XYZ')
+
+
+
+class Direction(Enum):
+    POS: int = 1
+    NEG: int = -1
+
+class Controller():
+    # The max speed.
+    MAX_SPEED = 1.0
+
+    # The minimum speed.
+    MIN_SPEED = 0.0
+    SPEED_CHANGE_PERCENT = 0.2
+
+    def __init__(self, sim) -> None:
+        super().__init__()
+        self._speeds =  np.array([0.01, 0.1])
+        self.sim = sim
+
+    @property
+    def pos_speed(self):
+        """
+        The speed that arm moves.
+        """
+        return self._speeds[0]
+
+    @property
+    def rot_speed(self):
+        """
+        The speed that wrist rotates.
+        """
+        return self._speeds[1]
+
+    def speed_up(self):
+        """
+        Increase gripper moving speed.
+        """
+        self._speeds = np.minimum(
+            self._speeds * (1 + self.SPEED_CHANGE_PERCENT), self.MAX_SPEED
+        )
+    def speed_down(self):
+        """
+        Decrease gripper moving speed.
+        """
+        self._speeds = np.maximum(
+            self._speeds * (1 - self.SPEED_CHANGE_PERCENT), self.MIN_SPEED
+        )
+
+    def move_x(self, direction: Direction) -> np.ndarray:
+        """
+        Move gripper along x axis.
+        """
+        return self._move(0, direction)
+
+    def move_y(self, direction: Direction) -> np.ndarray:
+        """
+        Move gripper along y axis.
+        """
+        return self._move(1, direction)
+
+    def move_z(self, direction: Direction) -> np.ndarray:
+        """
+        Move gripper along z axis.
+        """
+        return self._move(2, direction)
+
+
+    def rot_x(self, direction: Direction) -> np.ndarray:
+        """
+        Move gripper along x axis.
+        """
+        return self._rot(0, direction)
+
+    def rot_y(self, direction: Direction) -> np.ndarray:
+        """
+        Move gripper along y axis.
+        """
+        return self._rot(1, direction)
+
+    def rot_z(self, direction: Direction) -> np.ndarray:
+        """
+        Move gripper along z axis.
+        """
+        return self._rot(2, direction)
+
+    def _rot(self, axis: int, direction: Direction):
+        """
+        Move gripper along given axis and direction.
+        """
+        e = quat2euler(self.sim.data.mocap_quat[0])
+        if axis == 2:
+            r = R.from_matrix(rotation(e[0] , e[1], e[2] + self.rot_speed * direction.value))
+            self.sim.data.set_mocap_quat("mocap",np.array([r.as_quat()[3], r.as_quat()[0], r.as_quat()[1], r.as_quat()[2]]) )
+            self.sim.step()
+        elif axis == 1:
+            r = R.from_matrix(rotation(e[0] , e[1] + self.rot_speed * direction.value, e[2]))
+            self.sim.data.set_mocap_quat("mocap",np.array([r.as_quat()[3], r.as_quat()[0], r.as_quat()[1], r.as_quat()[2]]) )
+        elif axis == 0:
+            r = R.from_matrix(rotation(e[0] + self.rot_speed * direction.value, e[1], e[2]))
+            self.sim.data.set_mocap_quat("mocap",np.array([r.as_quat()[3], r.as_quat()[0], r.as_quat()[1], r.as_quat()[2]]) )
+        else: 
+            pass
+
+    def _move(self, axis: int, direction: Direction):
+        """
+        Move gripper along given axis and direction.
+        """
+        if axis == 2:
+            self.sim.data.set_mocap_pos("mocap", self.sim.data.mocap_pos +  np.array([0, 0, self.pos_speed * direction.value]))
+            self.sim.step()
+        elif axis == 1:
+            self.sim.data.set_mocap_pos("mocap", self.sim.data.mocap_pos +  np.array([0, self.pos_speed * direction.value, 0]))
+            self.sim.step()
+        elif axis == 0:
+            self.sim.data.set_mocap_pos("mocap", self.sim.data.mocap_pos +  np.array([self.pos_speed * direction.value, 0, 0]))
+            self.sim.step()
+        else: 
+            pass
+
+    def _grasp(self):
+        """
+        Grasp object.
+        """
+        force_measure = True
+  
+        # self.sim.data.ctrl[10]=self.sim.data.ctrl[10]+self.pos_speed 
+        # self.sim.data.ctrl[11]=self.sim.data.ctrl[11]+self.pos_speed 
+        # self.sim.data.ctrl[12]=self.sim.data.ctrl[12]+self.pos_speed 
+
+    def _loose(self):
+        """
+        Release object.
+        """
+        force_measure = False
+
+        # self.sim.data.ctrl[8]=self.sim.data.ctrl[8]-self.pos_speed 
+        # self.sim.data.ctrl[9]=self.sim.data.ctrl[9]-self.pos_speed 
+        # self.sim.data.ctrl[10]=self.sim.data.ctrl[10]-self.pos_speed 
+        # self.sim.data.ctrl[11]=self.sim.data.ctrl[11]-self.pos_speed 
+        # self.sim.data.ctrl[12]=self.sim.data.ctrl[12]-self.pos_speed 
+
+
+class Viewer(MjViewer):
+    def __init__(self, sim):
+        super().__init__(sim)
+        self.controller =  Controller(sim)
+
+    def key_callback(self, window, key, scancode, action, mods):
+        # Trigger on keyup only:
+        if key == glfw.KEY_UP:
+            self.controller.move_z(Direction.POS)
+
+        elif key == glfw.KEY_DOWN:
+            self.controller.move_z(Direction.NEG)
+
+        elif key == glfw.KEY_RIGHT:
+            self.controller.move_y(Direction.POS)
+
+        elif key == glfw.KEY_LEFT:
+            self.controller.move_y(Direction.NEG)
+
+        elif key == glfw.KEY_B:
+            self.controller.move_x(Direction.NEG) 
+
+        elif key == glfw.KEY_F:
+            self.controller.move_x(Direction.POS)
+
+        elif key == glfw.KEY_A:
+            self.controller.rot_y(Direction.POS)
+
+        elif key == glfw.KEY_S:
+            self.controller.rot_y(Direction.NEG)
+
+        elif key == glfw.KEY_Q:
+            self.controller.rot_x(Direction.POS)
+
+        elif key == glfw.KEY_W:
+            self.controller.rot_x(Direction.NEG)
+
+        elif key == glfw.KEY_Z:
+            self.controller.rot_z(Direction.POS)
+
+        elif key == glfw.KEY_X:
+            self.controller.rot_z(Direction.NEG)
+
+        elif key == glfw.KEY_MINUS:
+            self.controller.speed_down()
+
+        elif key == glfw.KEY_EQUAL:
+            self.controller.speed_up()
+
+        elif key == glfw.KEY_G:
+            self.controller._grasp()
+
+        elif key == glfw.KEY_L:
+            self.controller._loose()
+
+        else:
+            super().key_callback(window, key, scancode, action, mods)
+
+    def add_extra_menu(self):
+        self.add_overlay(
+            const.GRID_TOPRIGHT,
+            "Go up/down/left/right",
+            "[up]/[down]/[left]/[right] arrow",
+        )
+        self.add_overlay(const.GRID_TOPRIGHT, "Go forwarf/backward", "[F]/[B]")
+        self.add_overlay(const.GRID_TOPRIGHT, "ROT_X", "[Q]/[W]")
+        self.add_overlay(const.GRID_TOPRIGHT, "ROT_Y", "[A]/[S]")
+        self.add_overlay(const.GRID_TOPRIGHT, "ROT_Z", "[Z]/[X]")
+        self.add_overlay(const.GRID_TOPRIGHT, "Slow down/Speed up", "[-]/[=]")
+
+def main():
+    #Settings for collecting demonstrations
+    username = 'kelin'
+    apply_force = False
+    glove_calibration = False
+    glove.connect()
+    calibration_data = np.load(os.path.join(SENSEGLOVE_DIR, "glove_calibration", username + ".npy"))
+    glove_range = calibration_data[:21]
+    cali_min = calibration_data[21:]
+    
+    # load model
+    model = load_model_from_path("../assets/manipulation_tasks/keyboard_control.xml")
+    sim = MjSim(model)
+    # viewer set up
+    viewer = Viewer(sim)
+    body_id = sim.model.body_name2id('link7')
+    lookat = sim.data.body_xpos[body_id]
+    for idx, value in enumerate(lookat):
+       viewer.cam.lookat[idx] = value
+    viewer.cam.distance = 4
+    viewer.cam.azimuth = 180.
+    viewer.cam.elevation = 0
+    reset_state = sim.get_state()
+
+    sim.data.ctrl[7] = 0  # thumb pitch reset
+    # postion offset 
+
+
+    sim.data.ctrl[0:7] = np.array([0.49866162,  0.39745483,  0.04488565,  0.26535626,  0.53558828, -1.61374573, -3.34356744])
+
+    sim.forward()
+    step = 0
+    # sim.data.set_mocap_pos("mocap", np.array([0.08229997, 0.10921554, 1.871059]) + np.array([0.3, 0 , -0.4]))
+
+    while True:
+
+        # print(sim.data.get_body_xpos("link6"))
+        # for i in range(0, 7):
+        joints_temp = glove.get_hand_joints().contents
+        for i in range(21):
+            joints[i] = joints_temp[i]
+        hand_joints = sg.map_glove2robot(joints, glove_range, cali_min)
+        # print(hand_joints)
+        # print(sim.data.get_body_xpos("mocap"))
+        # print(sim.data.get_body_xquat("mocap"))
+        # sim.data.set_mocap_pos("mocap",np.array([2, 0.28,   0.7975]))
+        for i in range(7, 13):
+           sim.data.ctrl[i]=hand_joints[i-7]
+        # sg.apply_force(glove,sim.data.sensordata)
+        print(sim.data.sensordata)
+        ax.append(step)
+        ay.append(sim.data.sensordata)
+        sg.plot(ax,ay)
+        step = step + 1
+        sim.step()
+        viewer.render()
+        viewer.add_extra_menu()
+
+    # for i in range(sim.data.ncon):
+    # # Note that the contact array has more than `ncon` entries,
+    # # so be careful to only read the valid entries.
+    # contact = sim.data.contact[i]
+    # print('contact', i)
+    # print('dist', contact.dist)
+    # print('geom1', contact.geom1, sim.model.geom_id2name(contact.geom1))
+    # print('geom2', contact.geom2, sim.model.geom_id2name(contact.geom2))
+    # # There's more stuff in the data structure
+    # # See the mujoco documentation for more info!
+    # geom2_body = sim.model.geom_bodyid[sim.data.contact[i].geom2]
+    # print(' Contact force on geom2 body', sim.data.cfrc_ext[geom2_body])
+    # print('norm', np.sqrt(np.sum(np.square(sim.data.cfrc_ext[geom2_body]))))
+    # # Use internal functions to read out mj_contactForce
+    # c_array = np.zeros(6, dtype=np.float64)
+    # print('c_array', c_array)
+    # mujoco_py.functions.mj_contactForce(sim.model, sim.data, i, c_array)
+    # print('c_array', c_array)
+
+if __name__ == '__main__':
+    main()

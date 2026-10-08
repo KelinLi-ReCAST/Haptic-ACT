@@ -1,0 +1,56 @@
+<mujoco> 
+
+    <compiler angle="radian" convexhull="true" inertiafromgeom="auto"/>
+    <option timestep="0.005" gravity="0 0 -9.8100000000000005" cone="pyramidal" iterations="20" noslip_iterations="20" noslip_tolerance="1e-06"/>
+    <size njmax="1000" nconmax="10000"/>
+    
+    <asset>
+        <texture builtin="gradient" height="256" rgb1=".9 .9 1." rgb2=".2 .3 .4" type="skybox" width="256"/>
+        <material name="floor_mat" specular="0" shininess="0.0" reflectance="0" rgba="0.043 0.055 0.051 1"></material>
+        <material name="table_mat" specular="0.2" shininess="0.2" reflectance="0" rgba="1 1 1 1"></material>
+        <material name="pedestal_mat" specular="0.35" shininess="0.5" reflectance="0" rgba="0.705 0.585 0.405 1"></material>
+        <material name="block_mat" specular="0.5" shininess="0.9" reflectance="0.05" rgba="0.678 0.373 0.373 1"></material>
+        <!-- floor and walls -->
+        <!--textures borrowed from https://github.com/ARISEInitiative/robosuite-->
+        <texture file="../env_sim/textures/light-gray-plaster.png" type="2d" name="tex-light-gray-plaster"/>
+        <material name="walls_mat" reflectance="0.0" shininess="0.1" specular="0.1" texrepeat="3 3" texture="tex-light-gray-plaster" texuniform="true" />
+        <texture file="../env_sim/textures/light-gray-floor-tile.png" type="2d" name="texplane"/>
+        <material name="floorplane" reflectance="0.01" shininess="0.0" specular="0.0" texrepeat="2 2" texture="texplane" texuniform="true"/>
+    </asset>
+
+    <worldbody>
+        <body name="floor_and_walls" pos="1.2 0 0">
+            <geom condim="3" group="1" material="floorplane" name="floor" pos="0 0 0" size="3 3 .125" type="plane"/>
+            <geom pos="-1.25 2.25 1.5" quat="0.6532815 0.6532815 0.2705981 0.2705981" size="1.06 1.5 0.01" type="box" conaffinity="0" contype="0" group="1" name="wall_leftcorner_visual" material="walls_mat"/>
+            <geom pos="-1.25 -2.25 1.5" quat="0.6532815 0.6532815 -0.2705981 -0.2705981" size="1.06 1.5 0.01" type="box" conaffinity="0" contype="0" group="1" name="wall_rightcorner_visual" material="walls_mat"/>
+            <geom pos="1.25 3 1.5" quat="0.7071 0.7071 0 0" size="1.75 1.5 0.01" type="box" conaffinity="0" contype="0" group="1" name="wall_left_visual" material="walls_mat"/>
+            <geom pos="1.25 -3 1.5" quat="0.7071 -0.7071 0 0" size="1.75 1.5 0.01" type="box" conaffinity="0" contype="0" group="1" name="wall_right_visual" material="walls_mat"/>
+            <geom pos="-2 0 1.5" quat="0.5 0.5 0.5 0.5" size="1.5 1.5 0.01" type="box" conaffinity="0" contype="0" group="1" name="wall_rear_visual" material="walls_mat"/>
+            <geom pos="3 0 1.5" quat="0.5 0.5 -0.5 -0.5" size="3 1.5 0.01" type="box" conaffinity="0" contype="0" group="1" name="wall_front_visual" material="walls_mat"/>
+        </body>    
+
+        <body pos="0.75 0 0.6525" name="pedestal0">
+            <geom name="pedestalgeom0" size="0.1 0.1 0.01" pos="0.32 0.27 0" type="box" mass="2000" material="pedestal_mat"/>
+            <site pos="0.30 0.30 0" size="0.075 0.075 0.002" type="box" name="robotmountsite0" rgba="0.55 0.54 0.53 1"/>
+        </body>
+
+        <body pos="1.5 0.075 0.3425" name="table0">
+            <geom name="tablegeom0" size="0.3 0.6 0.2" pos="0 0 0" type="box" material="table_mat" density="2000" friction="1 1 1" contype="1" conaffinity="0"/>
+        </body>
+
+        <light directional="true" ambient="0.1 0.1 0.1" diffuse="0 0 0" specular="0 0 0" castshadow="false" pos="1.65 0 10" dir="-0.57 -0.57 -0.57" name="light0"/>
+        <light directional="true" ambient="0.1 0.1 0.1" diffuse="0 0 0" specular="0 0 0" castshadow="false" pos="0 -4 4" dir="0 1 -0.1" name="light1"/>
+        <light directional="true" ambient="0.05 0.05 0.05" diffuse="0 0 0" specular="0 0 0" castshadow="false" pos="2.13 1.6 2.5" name="light2"/>
+        <light pos="0 0 2" dir="0.2 0.2 -0.8" directional="true" diffuse="0.3 0.3 0.3" castshadow="false" name="light3"/>
+
+        <!-- front view -->
+        <camera mode="fixed" name="frontview" pos="3.2 0.1 1.45" quat="0.56 0.43 0.43 0.56"/>
+        <!-- bird view -->
+        <camera mode="fixed" name="birdview" pos="1.5 0 3.0" quat="0.7071 0 0 0.7071"/>
+        <!-- side view -->
+        <camera mode="fixed" name="sideview" pos="1.5 2.0 1.5" quat="0.009905065491771751 0.006877963156909582 0.5912228352893879 0.806418094001364" />
+        
+    </worldbody>
+
+
+</mujoco>

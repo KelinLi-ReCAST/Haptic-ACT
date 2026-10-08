@@ -1,0 +1,30 @@
+__pycache__/
+*.pyc
+*.egg-info/
+build/
+
+# Datasets, checkpoints and evaluation outputs are not distributed
+data/
+ckpt*/
+*.ckpt
+*.hdf5
+*.npy
+*.npz
+*.pkl
+*.mp4
+*.pdf
+
+# Per-user SenseGlove calibration
+senseglove/glove_calibration/
+ax.txt
+
+# Unity: generated folders, the MuJoCo native library and recorded demonstrations
+simulation/unity/Library/
+simulation/unity/Temp/
+simulation/unity/Logs/
+simulation/unity/UserSettings/
+simulation/unity/obj/
+simulation/unity/Build/
+simulation/unity/Assets/libmujoco.so
+simulation/unity/Assets/Demonstrations/
+simulation/unity/Assets/Demonstrations.meta

@@ -1,0 +1,46 @@
+<mujoco>
+
+    <include file="../robot_sim/xarm7_inspire.xml"/>
+    <include file="../env_sim/spare_room.xml"/>
+    <include file="../object_sim/common.xml"/>
+    <include file="../object_sim/camera/assets.xml"/>
+
+
+    <worldbody>
+
+        <body name="box" pos="1.605 0.35 0.55">
+            <joint name="box_joint" type="free" limited="false"/>
+            <site name="box_site" pos="0 0.075 -0.01" size="0.02" rgba="0 0 0 0" type="sphere"/>
+            <geom name="box_side0" pos="0 0 0" size="0.1 0.002 0.04" type="box" rgba="0.1 0.8 0.1 1" mass="1" condim="4" contype="1" conaffinity="1"/>
+            <geom name="box_side1" pos="0 0.2 0" size="0.1 0.002 0.04" type="box" rgba="0.2 0.9 0.2 1" mass="2" condim="4" contype="1" conaffinity="1"/>
+            <geom name="box_side2" pos="0.1 0.1 0" size="0.002 0.1 0.04" type="box" rgba="0.1 0.8 0.1 1" mass="2" condim="4" contype="1" conaffinity="1"/>
+            <geom name="box_side3" pos="-0.1 0.1 0" size="0.002 0.1 0.04" type="box" rgba="0.2 0.9 0.2 1" mass="2" condim="4" contype="1" conaffinity="1"/>
+            <geom name="box_side4" pos="-0 0.1 -0.038" size="0.1 0.1 0.002" type="box" rgba="0 0.5 0 1" mass="2" condim="4" contype="1" conaffinity="1"/>
+        </body>
+
+
+        <body name="object" pos="1.405 -0.05 0.55" childclass="grab">
+            <joint name="obj_joint" type="free" limited="false"/>
+            <include file="../object_sim/camera/body.xml"/>
+            <!-- <joint name="OBJTx" pos="0 0 0" axis="1 0 0" type="slide"/> -->
+            <!-- <joint name="OBJTy" pos="0 0 0" axis="0 1 0" type="slide"/>
+            <joint name="OBJTz" pos="0 0 0" axis="0 0 1" type="slide"/>
+            <joint name="OBJRx" pos="0 0 0" axis="1 0 0"/>
+            <joint name="OBJRy" pos="0 0 0" axis="0 1 0"/>
+            <joint name="OBJRz" pos="0 0 0" axis="0 0 1"/> -->
+        </body>
+
+        <body mocap="true" name="mocap" pos="1.296  0.28  0.7975">
+            <!-- <site pos="0 0 0.075" size="0.003 0.003 0.1" type="box" name="mocap_left_site1" rgba="0 0 1 1"/>
+            <site pos="0 0.075 0" size="0.003 0.1 0.003" type="box" name="mocap_left_site2" rgba="0 1 0 1"/>
+            <site pos="0.075 0 0" size="0.1 0.003 0.003" type="box" name="mocap_left_site3" rgba="1 0 0 1"/> -->
+        </body>
+
+    </worldbody>
+
+    <equality>
+        <weld body1="mocap" body2="link7"/>
+        <!-- <weld body1="mocap" body2="flange"/> -->
+    </equality>
+
+</mujoco>
