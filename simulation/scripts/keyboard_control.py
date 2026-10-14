@@ -1,4 +1,5 @@
 from mujoco_py import MjSim, MjViewer, load_model_from_path
+import os
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 import glfw
@@ -235,7 +236,7 @@ class Viewer(MjViewer):
 
 def main():
     # load model
-    model = load_model_from_path("../assets/manipulation_tasks/keyboard_control.xml")
+    model = load_model_from_path(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "assets", "manipulation_tasks", "keyboard_control.xml"))
     sim = MjSim(model)
     # viewer set up
     viewer = Viewer(sim)

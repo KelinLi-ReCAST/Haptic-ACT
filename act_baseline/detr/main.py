@@ -63,6 +63,7 @@ def get_args_parser():
     parser.add_argument('--kl_weight', action='store', type=int, help='KL Weight', required=False, default=10)
     parser.add_argument('--chunk_size', action='store', type=int, help='chunk_size', required=False, default=100)
     parser.add_argument('--temporal_agg', action='store_true')
+    parser.add_argument('--max_rollouts', action='store', type=int, required=False)
 
     return parser
 

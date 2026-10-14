@@ -6,6 +6,7 @@ from mujoco_py import const
 from enum import Enum
 import sys
 import os
+import argparse
 SENSEGLOVE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "senseglove")
 sys.path.append(SENSEGLOVE_DIR)
 import sg
@@ -14,6 +15,9 @@ import ctypes
 np.set_printoptions(suppress=True)
 joints = np.zeros(21)
 dll = ctypes.cdll.LoadLibrary
+# load the SDK libraries first so that libsenseglove.so finds them without LD_LIBRARY_PATH
+for _lib in ['libSGConnect.so', 'libSGCoreCpp.so']:
+    ctypes.CDLL(os.path.join(SENSEGLOVE_DIR, 'lib', _lib), mode=ctypes.RTLD_GLOBAL)
 glove = dll(os.path.join(SENSEGLOVE_DIR, 'lib', 'libsenseglove.so')) 
 glove.get_hand_joints.restype = ctypes.POINTER(ctypes.c_int * 21)
 ax = []
@@ -246,18 +250,14 @@ class Viewer(MjViewer):
         self.add_overlay(const.GRID_TOPRIGHT, "ROT_Z", "[Z]/[X]")
         self.add_overlay(const.GRID_TOPRIGHT, "Slow down/Speed up", "[-]/[=]")
 
-def main():
-    #Settings for collecting demonstrations
-    username = 'kelin'
-    apply_force = False
-    glove_calibration = False
+def main(username):
     glove.connect()
-    calibration_data = np.load(os.path.join(SENSEGLOVE_DIR, "glove_calibration", username + ".npy"))
+    calibration_data = np.load(os.path.join(sg.CALIBRATION_DIR, username + ".npy"))
     glove_range = calibration_data[:21]
     cali_min = calibration_data[21:]
     
     # load model
-    model = load_model_from_path("../assets/manipulation_tasks/keyboard_control.xml")
+    model = load_model_from_path(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "assets", "manipulation_tasks", "keyboard_control.xml"))
     sim = MjSim(model)
     # viewer set up
     viewer = Viewer(sim)
@@ -324,4 +324,6 @@ def main():
     # print('c_array', c_array)
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--username', type=str, required=True, help='name used for the glove calibration (senseglove/glove_calibration/<username>.npy)')
+    main(parser.parse_args().username)

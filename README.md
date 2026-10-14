@@ -20,7 +20,7 @@ Haptic-ACT extends [ACT](https://github.com/tonyzhaozh/act) (Action Chunking wit
 
 ## 1. Hardware
 
-Training and the simulation experiments need only a PC. The other components belong to the real-robot setup, whose teleoperation and deployment code is not part of this repository (§6).
+Training and the simulation experiments need only a PC. The other components belong to the real-robot setup (§6).
 
 | Component | Role | Notes |
 |---|---|---|
@@ -51,7 +51,8 @@ Training and the simulation experiments need only a PC. The other components bel
 `haptic_act/` and `act_baseline/` share the same structure and differ only where the force is used: `detr/models/detr_vae.py`, `policy.py`, `utils.py` (data loading and normalisation), `imitate_episodes.py` and `record_sim_episodes.py` (force logging), and the waypoints of `scripted_policy_xarm.py`. Both are derived from [ACT](https://github.com/tonyzhaozh/act); `detr/` is modified from [DETR](https://github.com/facebookresearch/detr) and keeps its Apache 2.0 licence. The objects in `simulation/assets/object_sim/` are from [object_sim](https://github.com/vikashplus/object_sim) (own licence in that folder) and the xArm7 model is adapted from [MuJoCo Menagerie](https://github.com/google-deepmind/mujoco_menagerie).
 
 ```
-environment.yml                          conda environment "haptic-act"
+environment.yml                          conda environment "haptic-act" (PyTorch 1.12, CUDA 11.3)
+environment_cu128.yml                    conda environment "haptic-act-cu128" for recent GPUs (PyTorch 2.11, CUDA 12.8)
 haptic_act/                              Haptic-ACT (images + joint positions + fingertip forces)
   constants.py                           task configuration (dataset path, 50 episodes, 400 steps, camera)
   ee_env_xarm.py                         MuJoCo env with end-effector (mocap) control, used by the scripted policy
@@ -86,7 +87,7 @@ real_robot/
 media/readme/                            images used in this README
 ```
 
-Datasets, checkpoints, evaluation logs and the figure scripts of the paper are not in git; see §3.3.
+Datasets, checkpoints and evaluation logs are not in git; see §3.3.
 
 ---
 
@@ -97,6 +98,13 @@ Datasets, checkpoints, evaluation logs and the figure scripts of the paper are n
 ```bash
 conda env create -f environment.yml    # Python 3.8, PyTorch 1.12 (CUDA 11.3), MuJoCo 2.3.7, dm_control 1.0.14
 conda activate haptic-act
+```
+
+PyTorch 1.12 with CUDA 11.3 does not run on recent GPUs (RTX 40 series and newer). For those, use the second environment, which has Python 3.10 and PyTorch 2.11 with CUDA 12.8 and keeps the other packages; the pipeline of §4 has been run with it:
+
+```bash
+conda env create -f environment_cu128.yml
+conda activate haptic-act-cu128
 ```
 
 Keep MuJoCo 2.3.7 with dm_control 1.0.14. MuJoCo 3.1.6 compiles the scene, but the scripted policy does not reach the object there (the mocap weld that drives the end effector behaves differently), so no demonstration passes the filter of Step 1.
@@ -110,7 +118,7 @@ Offscreen rendering uses EGL (`MUJOCO_GL=egl` is set at the top of `imitate_epis
 | Needed for | Install |
 |---|---|
 | `simulation/scripts/*.py` | [`mujoco_py`](https://github.com/openai/mujoco-py) with MuJoCo 2.1 and `glfw`. These scripts use the old `mujoco_py` API, not the `mujoco` bindings above, so they are best run in a separate environment |
-| `simulation/unity/` | Unity 2021.3.26f1 and the [MuJoCo Unity plug-in](https://github.com/google-deepmind/mujoco/tree/main/unity). `Packages/manifest.json` points `org.mujoco` to `file:/home/kelin/Downloads/mujoco-3.1.6/unity`; change it to your copy, and copy `libmujoco.so` (or `mujoco.dll`) of the same MuJoCo version into `Assets/` |
+| `simulation/unity/` | Unity 2021.3.26f1 and the [MuJoCo Unity plug-in](https://github.com/google-deepmind/mujoco/tree/main/unity). `Packages/manifest.json` points `org.mujoco` to `file:../../../../mujoco/unity`, i.e. a clone of the MuJoCo 3.1.6 sources next to this repository (`git clone -b 3.1.6 https://github.com/google-deepmind/mujoco.git`); change it if your copy is elsewhere, and copy `libmujoco.so` (or `mujoco.dll`) of the same MuJoCo version into `Assets/` |
 | SenseGlove | Connected glove; the libraries in `senseglove/lib/` are for Linux x86-64. `libsenseglove.so` exposes `connect`, `get_hand_joints`, `force_feedback` and `disconnect`, the same C interface as in [Immersive demonstrations](https://github.com/KelinLi-ReCAST/Immersive-demonstrations-are-the-key-to-imitation-learning), whose `build_senseglove.sh` rebuilds it |
 
 ### 3.3 Data and checkpoints
@@ -177,22 +185,21 @@ python imitate_episodes.py --eval --task_name pick_and_place --ckpt_dir ckpt --p
 
 The model arguments have to be the same as for training. `--eval` loads `ckpt/policy_best.ckpt` and runs rollouts of 400 steps with a new random object position each. A new chunk is queried every `chunk_size` steps, or every step with `--temporal_agg` (exponential weighting, k = 0.01). `--onscreen_render` shows the front camera.
 
-Rollouts continue until 50 of them have reached the maximum reward. For each successful rollout, the video is saved to `ckpt/video<k>.mp4` and its fingertip forces are kept. At the end the forces are written to `../data/force_hact.npy` (`act_baseline`: `force_act.npy`), and the success rate and returns to `ckpt/result_policy_best.txt`.
+Rollouts continue until 50 of them have reached the maximum reward. `--max_rollouts N` stops the evaluation after *N* rollouts in total, successful or not; without it the evaluation runs until the 50 successes are reached. For each successful rollout, the video is saved to `ckpt/video<k>.mp4` and its fingertip forces are kept. At the end the forces are written to `../data/force_hact.npy` (`act_baseline`: `force_act.npy`), and the success rate and returns to `ckpt/result_policy_best.txt`.
 
 ### Step 4: Compare the policies
 
-The comparison of the paper is made on the fingertip forces (in N, from the MuJoCo touch sensors `thumb_touch` … `pinky_touch`) of three sets of 50 successful episodes each: the scripted demonstrations (`force_demo.npy`, written in Step 1), Haptic-ACT (`force_hact.npy`) and ACT (`force_act.npy`). The scripts that produce the figures of the paper will be added later.
+The comparison of the paper is made on the fingertip forces (in N, from the MuJoCo touch sensors `thumb_touch` … `pinky_touch`) of three sets of 50 successful episodes each: the scripted demonstrations (`force_demo.npy`, written in Step 1), Haptic-ACT (`force_hact.npy`) and ACT (`force_act.npy`).
 
 ### Step 5 (optional): SenseGlove and MuJoCo teleoperation
 
 Calibrate the glove for a new user and check the joint mapping:
 
 ```bash
-cd senseglove
-python senseglove_feedback.py
+python senseglove/senseglove_feedback.py --username <name>
 ```
 
-Set `username`, `apply_force` and `glove_calibration` at the bottom of the file. With `glove_calibration = True` the script asks for a key press, records 500 samples while the user opens and closes the hand and moves the thumb, and stores the range and the minimum of each of the 21 glove channels in `glove_calibration/<username>.npy`. It then prints the six hand joints computed by `sg.map_glove2robot`:
+The script asks for a key press, records 500 samples while the user opens and closes the hand and moves the thumb, and stores the range and the minimum of each of the 21 glove channels in `senseglove/glove_calibration/<name>.npy`. `--no_calibration` loads an existing calibration instead, and `--apply_force` sends a test force to the thumb. The script then prints the six hand joints computed by `sg.map_glove2robot`:
 
 | Hand joint | Glove channel | Range (rad) |
 |---|---|---|
@@ -202,11 +209,11 @@ Set `username`, `apply_force` and `glove_calibration` at the bottom of the file.
 
 `sg.apply_force` converts a fingertip force *F* (N) to the brake command of each finger as `PWM = clamp(round(sqrt(max((F − b)·8 / a / 20, 0))), 0, 100)` with `a = 1.717e-3` and `b = 2.570`.
 
-To drive the simulated robot, run from `simulation/scripts/` (in the `mujoco_py` environment of §3.2):
+To drive the simulated robot (in the `mujoco_py` environment of §3.2):
 
 ```bash
-python keyboard_control.py               # arm and fingers from the keyboard
-python keyboard_control_senseglove.py    # arm from the keyboard, hand from the SenseGlove
+python simulation/scripts/keyboard_control.py                                # arm and fingers from the keyboard
+python simulation/scripts/keyboard_control_senseglove.py --username <name>   # arm from the keyboard, hand from the SenseGlove
 ```
 
 | Key | Motion of the mocap target |
@@ -217,7 +224,7 @@ python keyboard_control_senseglove.py    # arm from the keyboard, hand from the 
 | − / = | slower / faster |
 | G / L | close / open the fingers (hand actuators 8–12); no effect in `keyboard_control_senseglove.py` |
 
-`keyboard_control_senseglove.py` loads the calibration of `username = 'kelin'` from `senseglove/glove_calibration/`; change the name to the one used for calibration. It plots the touch sensor readings live; the call that sends them to the glove (`sg.apply_force`) is commented out.
+`keyboard_control_senseglove.py` loads the calibration `senseglove/glove_calibration/<name>.npy`. It plots the touch sensor readings live; the call that sends them to the glove (`sg.apply_force`) is commented out.
 
 ---
 
@@ -240,7 +247,7 @@ python keyboard_control_senseglove.py    # arm from the keyboard, hand from the 
 
 ## 6. Real-robot experiments
 
-The real-robot experiments used the immersive VR setup of §1. **The VR teleoperation stack (Quest 3 app, Unity digital twin, ROS nodes) and the code that ran the policies on the robot are not part of this repository.** The policies on the real robot use the same Haptic-ACT and ACT models, with two cameras (front and wrist) instead of one.
+The real-robot experiments used the immersive VR setup of §1. The policies on the real robot use the same Haptic-ACT and ACT models, with two cameras (front and wrist) instead of one.
 
 The real-robot episodes are stored in a compressed variant of the format above, which `real_robot/data_extract.py` reads:
 
@@ -251,18 +258,16 @@ The real-robot episodes are stored in a compressed variant of the format above, 
 | `observations/c_force` | 400 × 6 raw force readings of the Inspire hand; `data_extract.py` keeps columns 1–5 as the five fingers |
 | `compress_len` | Encoded length of each frame |
 
-The raw readings are converted to fingertip forces with the per-finger cubic fit of Eq. (2) and Table I of the paper, obtained by pressing each fingertip against a force gauge.
-
 ---
 
 ## 7. Known limitations
 
-- `imitate_episodes.py --eval` repeats rollouts until 50 have succeeded and never stops if the policy does not succeed. Failed rollouts are included in the success rate, but the "Reward >= r" lines of `result_policy_best.txt` divide by 50 instead of by the number of rollouts, so they can exceed 100 %. Only successful rollouts are stored in `force_hact.npy` / `force_act.npy`.
+- Without `--max_rollouts`, `imitate_episodes.py --eval` repeats rollouts until 50 have succeeded and does not stop if the policy never succeeds. Only successful rollouts are stored in `force_hact.npy` / `force_act.npy`.
 - `contact_force` is fed to the policy, but it is not predicted: the action is the 13 joint targets, as in ACT.
 - The simulation uses a single camera (`frontview`), while the paper describes two cameras for the real robot.
 - The success criterion is contact between the object and the floor of the basket without contact with the hand; it is checked through named geom pairs (`camera_contact0/1`, `box_side4`), so it is specific to the object model used in `pick_and_place.xml`.
 - `data_preprocessing.py` is a template: its `__main__` converts random arrays and writes to `data/preprocessed/`.
-- `simulation/scripts/` use `mujoco_py` and load the scene through the relative path `../assets/...`, so they have to be started from `simulation/scripts/`.
+- `simulation/scripts/` use `mujoco_py`.
 - The scripts in `simulation/scripts/` do not record data, and `keyboard_control.py` prints the mocap pose every step. The Unity scripts save images and actuator commands every 10 frames to `Assets/Demonstrations/`; the simulated demonstrations of §4 are generated by the scripted policy instead.
 - The SenseGlove libraries are Linux x86-64 binaries.
 

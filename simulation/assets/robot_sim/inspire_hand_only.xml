@@ -1,5 +1,5 @@
 <mujoco model="R_inspire">
-  <compiler angle="radian" convexhull="true" inertiafromgeom="auto"/>
+  <compiler angle="radian" convexhull="true" inertiafromgeom="auto" autolimits="true"/>
   <option timestep="0.005" gravity="0 0 -9.8100000000000005" cone="pyramidal" iterations="20" noslip_iterations="20" noslip_tolerance="1e-06"/>
   <size njmax="1000" nconmax="10000"/>
 
@@ -49,11 +49,11 @@
     <texture name="texgeom" type="cube" builtin="flat" rgb1="0.80000000000000004 0.59999999999999998 0.40000000000000002" rgb2="0.80000000000000004 0.59999999999999998 0.40000000000000002" mark="cross" markrgb="1 1 1" random="0.01" width="127" height="1278"/>
     <material name="matplane" class="/" texture="texplane" texrepeat="1 1" texuniform="true" reflectance="0.3"/>
     <material name="matgeom" class="/" texture="texgeom" texuniform="true" rgba="0.80000000000000004 0.59999999999999998 0.40000000000000002 1"/>
-    <texture name="table/texwood" type="2d" file="./textures/wood_small-c02f5dd77a78299200675e936ca991144454eb2d.png"/>
+    <texture name="table/texwood" type="2d" file="../env_sim/textures/wood_small-c02f5dd77a78299200675e936ca991144454eb2d.png"/>
     <material name="table/matwood" class="table/" texture="table/texwood"/>
-    <mesh name="004_sugar_box/mesh_visual_004_sugar_box_00" class="004_sugar_box/\" file="./textures/22b5cdbedcc55b094f0a8f14e29d2caa37527449-22b5cdbedcc55b094f0a8f14e29d2caa37527449.msh" scale="1 1 1"/>
-    <mesh name="004_sugar_box/mesh_collision_004_sugar_box_00" class="004_sugar_box/\" file="./textures/22b5cdbedcc55b094f0a8f14e29d2caa37527449-22b5cdbedcc55b094f0a8f14e29d2caa37527449.msh" scale="1 1 1"/>
-    <texture name="004_sugar_box/tex_object" type="2d" file="./textures/2b8da1b665accf38f158ff12c538576bb2cb83a0-2b8da1b665accf38f158ff12c538576bb2cb83a0.png"/>
+    <mesh name="004_sugar_box/mesh_visual_004_sugar_box_00" class="004_sugar_box/\" file="../env_sim/textures/22b5cdbedcc55b094f0a8f14e29d2caa37527449-22b5cdbedcc55b094f0a8f14e29d2caa37527449.msh" scale="1 1 1"/>
+    <mesh name="004_sugar_box/mesh_collision_004_sugar_box_00" class="004_sugar_box/\" file="../env_sim/textures/22b5cdbedcc55b094f0a8f14e29d2caa37527449-22b5cdbedcc55b094f0a8f14e29d2caa37527449.msh" scale="1 1 1"/>
+    <texture name="004_sugar_box/tex_object" type="2d" file="../env_sim/textures/2b8da1b665accf38f158ff12c538576bb2cb83a0-2b8da1b665accf38f158ff12c538576bb2cb83a0.png"/>
     <material name="004_sugar_box/mat_texture" class="004_sugar_box/\" texture="004_sugar_box/tex_object"/>
   </asset>
   <worldbody>

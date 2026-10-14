@@ -86,6 +86,7 @@ def main(args):
         'task_name': task_name,
         'seed': args['seed'],
         'temporal_agg': args['temporal_agg'],
+        'max_rollouts': args['max_rollouts'],
         'camera_names': camera_names,
         'real_robot': False
     }
@@ -163,6 +164,7 @@ def eval_bc(config, ckpt_name, save_episode=True):
     max_timesteps = config['episode_len']
     task_name = config['task_name']
     temporal_agg = config['temporal_agg']
+    max_rollouts = config['max_rollouts']
     onscreen_cam = 'frontview'
 
     # load policy and stats
@@ -199,8 +201,10 @@ def eval_bc(config, ckpt_name, save_episode=True):
     highest_rewards = []
     all_contact_force = []
     while rollout_id < num_rollouts:
+        if max_rollouts is not None and len(highest_rewards) >= max_rollouts:
+            print(f'Stopping after {max_rollouts} rollouts with {rollout_id} successful')
+            break
         force_history = []
-        rollout_id += 0
         ### set task
         if 'pick_and_place' in task_name:
             BOX_POSE[0] = sample_box_pose() # used in sim reset
@@ -309,8 +313,8 @@ def eval_bc(config, ckpt_name, save_episode=True):
     summary_str = f'\nSuccess rate: {success_rate}\nAverage return: {avg_return}\n\n'
     for r in range(env_max_reward+1):
         more_or_equal_r = (np.array(highest_rewards) >= r).sum()
-        more_or_equal_r_rate = more_or_equal_r / num_rollouts
-        summary_str += f'Reward >= {r}: {more_or_equal_r}/{num_rollouts} = {more_or_equal_r_rate*100}%\n'
+        more_or_equal_r_rate = more_or_equal_r / len(highest_rewards)
+        summary_str += f'Reward >= {r}: {more_or_equal_r}/{len(highest_rewards)} = {more_or_equal_r_rate*100}%\n'
 
     print(summary_str)
 
@@ -455,5 +459,6 @@ if __name__ == '__main__':
     parser.add_argument('--hidden_dim', action='store', type=int, help='hidden_dim', required=False, default=512)
     parser.add_argument('--dim_feedforward', action='store', type=int, help='dim_feedforward', required=False, default=3200)
     parser.add_argument('--temporal_agg', action='store_true')
+    parser.add_argument('--max_rollouts', action='store', type=int, help='stop evaluation after this many rollouts, successful or not (default: no limit)', required=False, default=None)
     
     main(vars(parser.parse_args()))

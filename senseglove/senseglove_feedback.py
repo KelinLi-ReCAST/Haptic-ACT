@@ -8,6 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 import ctypes
+import argparse
 import sg
 
 ax = []
@@ -15,6 +16,9 @@ ay = []
 np.set_printoptions(suppress=True)
 joints = np.zeros(21)
 dll = ctypes.cdll.LoadLibrary
+# load the SDK libraries first so that libsenseglove.so finds them without LD_LIBRARY_PATH
+for _lib in ['libSGConnect.so', 'libSGCoreCpp.so']:
+    ctypes.CDLL(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'lib', _lib), mode=ctypes.RTLD_GLOBAL)
 glove = dll(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'lib', 'libsenseglove.so')) 
 glove.get_hand_joints.restype = ctypes.POINTER(ctypes.c_int * 21)
 
@@ -24,7 +28,7 @@ def main(username, apply_force, glove_calibration):
     if glove_calibration:
         glove_range, cali_min = sg.hand_calibration(glove,username)
     else:
-        calibration_data = np.load("./glove_calibration/"+username+".npy")
+        calibration_data = np.load(os.path.join(sg.CALIBRATION_DIR, username + ".npy"))
         glove_range = calibration_data[:21]
         cali_min = calibration_data[21:]
     
@@ -49,12 +53,12 @@ def main(username, apply_force, glove_calibration):
         print(hand_joints)
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--username', type=str, required=True, help='name of the calibration file, senseglove/glove_calibration/<username>.npy')
+    parser.add_argument('--no_calibration', action='store_true', help='load an existing calibration instead of calibrating')
+    parser.add_argument('--apply_force', action='store_true', help='send a test force to the thumb')
+    args = parser.parse_args()
+
     glove.connect()
-
-    #Settings for collecting demonstrations
-    username = 'kelin'
-    apply_force = False
-    glove_calibration = True
-
-    main(username, apply_force, glove_calibration)
+    main(args.username, args.apply_force, not args.no_calibration)
     glove.disconnect()    

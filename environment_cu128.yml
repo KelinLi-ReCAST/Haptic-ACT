@@ -1,0 +1,25 @@
+name: haptic-act-cu128
+channels:
+  - conda-forge
+dependencies:
+  - python=3.10
+  - pip
+  - pip:
+      - --extra-index-url https://download.pytorch.org/whl/cu128
+      - torch==2.11.0+cu128
+      - torchvision==0.26.0+cu128
+      - mujoco==2.3.7
+      - dm_control==1.0.14
+      - numpy==1.24.4
+      - scipy==1.10.1
+      - h5py==3.11.0
+      - opencv-python==4.9.0.80
+      - matplotlib==3.7.5
+      - einops==0.8.0
+      - pyquaternion==0.9.9
+      - pyyaml==6.0.1
+      - rospkg==1.5.1
+      - pexpect==4.9.0
+      - ipython==8.12.3
+      - tqdm==4.66.4
+      - packaging==24.0

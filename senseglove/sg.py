@@ -1,8 +1,11 @@
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 import math
 import time
 from math import *
+
+CALIBRATION_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'glove_calibration')
 
 def hand_calibration(glove,demonstrator):
   print("\nCalibrate the glove, press any button to start:")
@@ -32,7 +35,8 @@ def hand_calibration(glove,demonstrator):
   file.write(str([cali,cali_min]))
   file.close()
   npsave = np.concatenate((cali,cali_min)).copy()
-  np.save("./glove_calibration/"+demonstrator,npsave)
+  os.makedirs(CALIBRATION_DIR, exist_ok=True)
+  np.save(os.path.join(CALIBRATION_DIR, demonstrator), npsave)
   print("\n\nCalibration completed, press any button to continue")
   input()
   return cali, cali_min
