@@ -268,6 +268,12 @@ The raw readings are converted to fingertip forces with the per-finger cubic fit
 
 ---
 
+## License
+
+The code is released under the [MIT License](LICENSE). `haptic_act/detr/` and `act_baseline/detr/` are modified from DETR and keep its Apache 2.0 licence, and `simulation/assets/object_sim/` keeps the licence of object_sim (see the `LICENSE` files in those folders).
+
+---
+
 ## Citation
 
 ```bibtex

@@ -1,0 +1,47 @@
+cff-version: 1.2.0
+message: "If you use this code, please cite the paper below."
+title: "Haptic-ACT: Bridging Human Intuition with Compliant Robotic Manipulation via Immersive VR"
+type: software
+license: MIT
+url: "https://sites.google.com/view/hapticact"
+repository-code: "https://github.com/KelinLi-ReCAST/Haptic-ACT"
+authors:
+  - family-names: Li
+    given-names: Kelin
+  - family-names: Wagh
+    given-names: Shubham M
+  - family-names: Sharma
+    given-names: Nitish
+  - family-names: Bhadani
+    given-names: Saksham
+  - family-names: Chen
+    given-names: Wei
+  - family-names: Liu
+    given-names: Chang
+  - family-names: Kormushev
+    given-names: Petar
+preferred-citation:
+  type: conference-paper
+  title: "Haptic-ACT: Bridging Human Intuition with Compliant Robotic Manipulation via Immersive VR"
+  authors:
+    - family-names: Li
+      given-names: Kelin
+    - family-names: Wagh
+      given-names: Shubham M
+    - family-names: Sharma
+      given-names: Nitish
+    - family-names: Bhadani
+      given-names: Saksham
+    - family-names: Chen
+      given-names: Wei
+    - family-names: Liu
+      given-names: Chang
+    - family-names: Kormushev
+      given-names: Petar
+  collection-title: "IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS)"
+  year: 2025
+  doi: "10.1109/IROS60139.2025.11247471"
+  identifiers:
+    - type: other
+      value: "arXiv:2409.11925"
+      description: arXiv preprint
