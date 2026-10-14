@@ -119,7 +119,7 @@ Offscreen rendering uses EGL (`MUJOCO_GL=egl` is set at the top of `imitate_epis
 |---|---|
 | `simulation/scripts/*.py` | [`mujoco_py`](https://github.com/openai/mujoco-py) with MuJoCo 2.1 and `glfw`. These scripts use the old `mujoco_py` API, not the `mujoco` bindings above, so they are best run in a separate environment |
 | `simulation/unity/` | Unity 2021.3.26f1 and the [MuJoCo Unity plug-in](https://github.com/google-deepmind/mujoco/tree/main/unity). `Packages/manifest.json` points `org.mujoco` to `file:../../../../mujoco/unity`, i.e. a clone of the MuJoCo 3.1.6 sources next to this repository (`git clone -b 3.1.6 https://github.com/google-deepmind/mujoco.git`); change it if your copy is elsewhere, and copy `libmujoco.so` (or `mujoco.dll`) of the same MuJoCo version into `Assets/` |
-| SenseGlove | Connected glove; the libraries in `senseglove/lib/` are for Linux x86-64. `libsenseglove.so` exposes `connect`, `get_hand_joints`, `force_feedback` and `disconnect`, the same C interface as in [Immersive demonstrations](https://github.com/KelinLi-ReCAST/Immersive-demonstrations-are-the-key-to-imitation-learning), whose `build_senseglove.sh` rebuilds it |
+| SenseGlove | Connected glove; the libraries in `senseglove/lib/` are for Linux x86-64. `libsenseglove.so` exposes `connect`, `get_hand_joints`, `force_feedback` and `disconnect`, the same C interface as in [Immersive demonstrations](https://github.com/KelinLi-ReCAST/Immersive-demonstrations), whose `build_senseglove.sh` rebuilds it |
 
 ### 3.3 Data and checkpoints
 
