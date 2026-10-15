@@ -3,7 +3,7 @@
 <p align="center">
   <a href="https://arxiv.org/abs/2409.11925"><img src="https://img.shields.io/badge/Paper-333333?style=for-the-badge&logo=arxiv&logoColor=white" alt="Paper"></a>
   <a href="https://github.com/KelinLi-ReCAST/Haptic-ACT"><img src="https://img.shields.io/badge/Code-333333?style=for-the-badge&logo=github&logoColor=white" alt="Code"></a>
-  <img src="https://img.shields.io/badge/Dataset-333333?style=for-the-badge&logo=huggingface&logoColor=white" alt="Dataset">
+  <a href="https://huggingface.co/datasets/KelinLiIC/Haptic-ACT"><img src="https://img.shields.io/badge/Dataset-333333?style=for-the-badge&logo=huggingface&logoColor=white" alt="Dataset"></a>
   <a href="https://sites.google.com/view/hapticact"><img src="https://img.shields.io/badge/Project-333333?style=for-the-badge&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIyIj48Y2lyY2xlIGN4PSIxMiIgY3k9IjEyIiByPSIxMCIvPjxlbGxpcHNlIGN4PSIxMiIgY3k9IjEyIiByeD0iNC4yIiByeT0iMTAiLz48cGF0aCBkPSJNMiAxMmgyME0zLjUgN2gxN00zLjUgMTdoMTciLz48L3N2Zz4K" alt="Project"></a>
 </p>
 
