@@ -31,9 +31,9 @@ Training and the simulation experiments need only a PC. The other components bel
 | 2× ZED RGB-D cameras | One stationary, one on the wrist | Real robot only; the simulation uses a rendered front camera |
 
 <p align="center">
-  <img src="media/readme/system_overview.png" height="380" alt="Immersive VR teleoperation setup">
+  <img src="media/readme/system_overview.png" width="48%" alt="Immersive VR teleoperation setup">
   &nbsp;
-  <img src="media/readme/teleoperation_pipeline.png" height="380" alt="Communication and feedback within the teleoperation system">
+  <img src="media/readme/teleoperation_pipeline.png" width="49%" alt="Communication and feedback within the teleoperation system">
 </p>
 
 *Left: the immersive VR setup: (a) the xArm7 and Inspire hand following the demonstrator, (b) the demonstrator with the Quest 3 and the SenseGlove, (c) the view in the headset. Right: data flow. The wrist pose from the Quest 3 is converted to arm joints by a Unity digital twin, the glove joints are mapped to the hand, both are sent over ROS, and the hand's force readings are rendered back to the fingers through the SenseGlove.*
