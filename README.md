@@ -1,5 +1,12 @@
 # Haptic-ACT: Bridging Human Intuition with Compliant Robotic Manipulation via Immersive VR
 
+<p align="center">
+  <a href="https://arxiv.org/abs/2409.11925"><img src="https://img.shields.io/badge/Paper-333333?style=for-the-badge&logo=arxiv&logoColor=white" alt="Paper"></a>
+  <a href="https://github.com/KelinLi-ReCAST/Haptic-ACT"><img src="https://img.shields.io/badge/Code-333333?style=for-the-badge&logo=github&logoColor=white" alt="Code"></a>
+  <img src="https://img.shields.io/badge/Dataset-333333?style=for-the-badge&logo=huggingface&logoColor=white" alt="Dataset">
+  <a href="https://sites.google.com/view/hapticact"><img src="https://img.shields.io/badge/Project-333333?style=for-the-badge&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIyIj48Y2lyY2xlIGN4PSIxMiIgY3k9IjEyIiByPSIxMCIvPjxlbGxpcHNlIGN4PSIxMiIgY3k9IjEyIiByeD0iNC4yIiByeT0iMTAiLz48cGF0aCBkPSJNMiAxMmgyME0zLjUgN2gxN00zLjUgMTdoMTciLz48L3N2Zz4K" alt="Project"></a>
+</p>
+
 Code for the paper [*Haptic-ACT: Bridging Human Intuition with Compliant Robotic Manipulation via Immersive VR*](https://arxiv.org/abs/2409.11925) (Kelin Li, Shubham M Wagh, Nitish Sharma, Saksham Bhadani, Wei Chen, Chang Liu and Petar Kormushev, IEEE/RSJ IROS 2025). Project page: [sites.google.com/view/hapticact](https://sites.google.com/view/hapticact).
 
 The repository contains the simulation side of the work: a MuJoCo model of the xArm7 arm with the Inspire dexterous hand, the scripted demonstrations of the pick-and-place task, the Haptic-ACT policy, and the original ACT as the baseline, both trained and evaluated on the same data. It also contains the SenseGlove interface, a MuJoCo teleoperation script driven by the glove, a Unity project that loads the MuJoCo scene, and a loader for the real-robot recordings.
