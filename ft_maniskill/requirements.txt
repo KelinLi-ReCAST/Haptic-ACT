@@ -1,0 +1,5 @@
+# Python 3.12. Install from the repository root:
+#   pip install --extra-index-url https://download.pytorch.org/whl/cu128 -r ft_maniskill/requirements.txt
+lerobot[dataset,training,diffusion]==0.6.1
+mani_skill @ git+https://github.com/KelinLi-ReCAST/ManiSkill.git@5dfe802999de3da068cf1c29289b78af96a483d7
+-e ft_maniskill/policy/lerobot_policy_acthaptic
