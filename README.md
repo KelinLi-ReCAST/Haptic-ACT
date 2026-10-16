@@ -283,6 +283,8 @@ The real-robot episodes are stored in a compressed variant of the format above, 
 - `simulation/scripts/` use `mujoco_py`.
 - The SenseGlove libraries are Linux x86-64 binaries.
 
+---
+
 ## 8. Haptic-ACT with wrist force/torque (ManiSkill)
 
 This version keeps the Haptic-ACT architecture and replaces the five fingertip forces with the 6-axis force/torque (F/T) at the robot's wrist, which any arm with a wrist F/T sensor provides, and targets contact-rich manipulation. It is implemented on [LeRobot](https://github.com/huggingface/lerobot) 0.6.1 and evaluated in [ManiSkill](https://github.com/mani-skill/ManiSkill) on a Franka Panda with a wrist camera, against ACT, Diffusion Policy and BC trained on the same demonstrations. The code is in `ft_maniskill/`; the datasets and the trained models are on [Hugging Face](https://huggingface.co/datasets/KelinLiIC/Haptic-ACT), in `ft_maniskill/<task>/lerobot_ft_replan/` and `ft_maniskill/<task>/models/<method>/`.
