@@ -95,10 +95,8 @@ media/readme/                            images used in this README
 ft_maniskill/                            Haptic-ACT with wrist force/torque in ManiSkill (§8)
   policy/lerobot_policy_acthaptic/       the policy, as a LeRobot plugin (--policy.type=acthaptic)
   train/train_acthaptic.py               lerobot-train entry point of the policy
-  eval/eval_ft.py                        evaluation of every method (10 seeds x 25 trials)
+  eval/eval_ft.py                        evaluation (10 seeds x 25 trials)
   dataset_processing/                    force columns, re-planning label, F/T window, stats, force-free copy
-  analysis/                              results table and curves
-  results/                               success rate of every evaluated checkpoint, table, figures
   requirements.txt                       Python 3.12 environment
 ```
 
@@ -287,113 +285,43 @@ The real-robot episodes are stored in a compressed variant of the format above, 
 
 ## 8. Haptic-ACT with wrist force/torque (ManiSkill)
 
-This version keeps the Haptic-ACT architecture and replaces the five fingertip forces with the 6-axis force/torque (F/T) at the robot's wrist, which any arm with a wrist F/T sensor provides, and targets contact-rich manipulation. It is implemented on [LeRobot](https://github.com/huggingface/lerobot) 0.6.1 and evaluated in [ManiSkill](https://github.com/mani-skill/ManiSkill) on a Franka Panda with a wrist camera, against ACT, Diffusion Policy and BC trained on the same demonstrations. The code is in `ft_maniskill/`; the datasets and the trained models are on [Hugging Face](https://huggingface.co/datasets/KelinLiIC/Haptic-ACT), in `ft_maniskill/<task>/lerobot_ft_replan/` and `ft_maniskill/<task>/models/<method>/`.
+This version keeps the Haptic-ACT architecture and replaces the five fingertip forces with the 6-axis force/torque (F/T) at the wrist, for contact-rich manipulation. It is built on [LeRobot](https://github.com/huggingface/lerobot) 0.6.1 and runs in [ManiSkill](https://github.com/mani-skill/ManiSkill) with a Franka Panda and a wrist camera. The input is the wrench at the TCP over the last 5 steps, estimated from the joint torques (τ = Jᵀ F) and given to ACT's transformer encoder as an extra token; a re-planning head on that token lets the policy drop its current action chunk when it detects a jam. The code is in `ft_maniskill/`, the datasets and trained models are on [Hugging Face](https://huggingface.co/datasets/KelinLiIC/Haptic-ACT).
 
-### 8.1 Method
+| PegInsertionSide | PlugChargerTopDown |
+|:---:|:---:|
+| ![peg](media/readme/ft_peg.gif) | ![plug](media/readme/ft_plug_topdown.gif) |
+| **PickCube** | **StackCube** |
+| ![pickcube](media/readme/ft_pickcube.gif) | ![stackcube](media/readme/ft_stackcube.gif) |
+| **PushCube** | |
+| ![pushcube](media/readme/ft_pushcube.gif) | |
 
-| | Haptic-ACT (§1–7) | Haptic-ACT with F/T |
-|---|---|---|
-| Robot, simulator | xArm7 + Inspire hand, MuJoCo | Franka Panda with wrist camera (`panda_wristcam`), ManiSkill 3, 20 Hz |
-| Images | `frontview`, 480 × 640 | `base_camera` and `wrist_camera`, 480 × 480 |
-| Force input | 5 fingertip forces | TCP wrench [fx fy fz tx ty tz] (N, N m, TCP frame), last 5 readings, oldest first (30 dims) |
-| Action | 13 joint targets | 8: 7 arm-joint targets and the gripper (`pd_joint_pos`) |
+*Haptic-ACT with F/T in each task (left) and the force at the TCP during the episode (right), real time.*
 
-- The wrench is estimated from the 7 arm-joint torques as the least-squares solution of τ = Jᵀ F, with the TCP Jacobian in the TCP frame (ManiSkill has no F/T sensor model; with the Panda's link gravity disabled this is the quasi-static wrench a wrist sensor would read). The same computation is used for the datasets and at evaluation.
-- The F/T window is LeRobot's `observation.environment_state`, which ACT projects into its own token of the transformer encoder, next to the robot state and the image features.
-- During training the F/T token is zeroed for 30 % of the samples (haptic dropout), so that the policy keeps learning from the images.
-- A re-planning head on the encoder output of the F/T token predicts a per-frame `replan` label (the deliberate jams of the peg demonstrations, see §8.2). At rollout the policy is queried every step; when P(re-plan) > 0.5 (at most once per 25 steps) the rest of the current action chunk is replaced by the new one, otherwise the chunk of 50 actions is executed as in ACT.
-
-### 8.2 Tasks and datasets
-
-| Task | ManiSkill environment | Demonstrations | Episodes | Frames |
-|---|---|---|---|---|
-| PegInsertionSide | `PegInsertionSideFT-v1` | scripted jam and recovery | 1000 | 196,523 |
-| PickCube | `PickCubeVisGoal-v1` (evaluated with `PickCubeVisGoalThr3-v1`) | motion planner | 1000 | 78,246 |
-| StackCube | `StackCube-v1` | ManiSkill's demonstrations, replayed | 1000 | 107,420 |
-| PushCube | `PushCube-v1` | ManiSkill's demonstrations, replayed | 990 | 68,287 |
-
-The environments come from the `haptic-act` branch of [KelinLi-ReCAST/ManiSkill](https://github.com/KelinLi-ReCAST/ManiSkill/tree/haptic-act), a fork of ManiSkill at commit `42b6824` that adds the variants in `mani_skill/envs/tasks/tabletop/haptic_act.py`:
-
-- `PegInsertionSideFT-v1`: 4 mm clearance instead of 3 mm, the box yaw fixed (only its position is random), the wrist camera tilted by −40° so that the hole stays in view, and the base camera at the viewpoint of the render camera.
-- `PickCubeVisGoal-v1`: a random cube size (half-size 1.5–2.8 cm) and the random goal drawn as a green sphere that the cameras see; `PickCubeVisGoalThr3-v1` counts success within 3 cm of the goal instead of 2.5 cm.
-
-All demonstrations were recorded in these environments with absolute joint-position control (`pd_joint_pos`) and the two 480 × 480 cameras. The peg demonstrations deliberately jam before succeeding: after grasping and aligning the peg, the target is shifted 7–12 mm sideways in the hole plane, the peg is pushed against the box face, backed off 2–3 cm, realigned and inserted. An episode is kept only if it succeeds in the final insertion, after the jam. The `replan` label is 1 on the frames of the jam with a peg–box contact force above 2 N; in the other three tasks no jam happens and it is 0 everywhere.
-
-Each dataset on Hugging Face is the LeRobot dataset (format v3.0) that F/T Haptic-ACT trains on (`lerobot_ft_replan`). Besides the images, `observation.state` (9 joint positions), `observation.qvel` and `action`, it holds the force columns made by `ft_maniskill/dataset_processing/` from the recorded joint torques: `observation.torque`, `observation.torque_hist`, `observation.wrench`, `observation.environment_state` (the F/T window) and `replan`. The baselines train on a copy without the force columns, so that ACT and Diffusion Policy do not receive the F/T window as an input:
-
-```bash
-python ft_maniskill/dataset_processing/make_baseline_dataset.py <task>/lerobot_ft_replan --out <task>/lerobot
-```
-
-### 8.3 Installation
+### 8.1 Setup
 
 ```bash
 python3.12 -m venv .venv-ft && source .venv-ft/bin/activate
 pip install --extra-index-url https://download.pytorch.org/whl/cu128 -r ft_maniskill/requirements.txt
-hf download KelinLiIC/Haptic-ACT --repo-type dataset --local-dir data_ft --include "ft_maniskill/*"   # datasets and trained models
+hf download KelinLiIC/Haptic-ACT --repo-type dataset --local-dir data_ft --include "ft_maniskill/*"
 ```
 
-To download only the datasets or only the models, use `--include "ft_maniskill/*/lerobot_ft_replan/*"` or `--include "ft_maniskill/*/models/*"`. The requirements install LeRobot 0.6.1, the ManiSkill fork and the policy plugin. Rendering uses Vulkan (see the ManiSkill installation notes).
+The requirements install LeRobot, the policy plugin and the `haptic-act` branch of [KelinLi-ReCAST/ManiSkill](https://github.com/KelinLi-ReCAST/ManiSkill/tree/haptic-act), which adds the task variants used here (`PegInsertionSideFT-v1`, `PickCubeVisGoal-v1`, `PlugChargerTopDown-v1`; StackCube-v1 and PushCube-v1 are unchanged). The download holds, per task, the LeRobot dataset `ft_maniskill/<task>/lerobot_ft_replan/` (about 1000 demonstrations, 20 Hz, two 480 × 480 cameras, joint states, actions and the force columns) and the trained models `ft_maniskill/<task>/models/{haptic-act,act,dp,bc}/`. The PlugChargerTopDown dataset and models will be added.
 
-### 8.4 Training
-
-All methods: batch 32, seed 1000, 200k steps for PegInsertionSide, 150k for PickCube and StackCube, 60k for PushCube. F/T Haptic-ACT trains on `lerobot_ft_replan`, the baselines on the force-free copy.
+### 8.2 Training and evaluation
 
 ```bash
-D=data_ft/ft_maniskill/peg; STEPS=200000
-ACT_FLAGS="--policy.chunk_size=100 --policy.n_action_steps=50 --policy.n_obs_steps=1 --policy.use_vae=true --policy.kl_weight=10 \
-  --policy.vision_backbone=resnet18 --policy.pretrained_backbone_weights=ResNet18_Weights.IMAGENET1K_V1 \
-  --policy.optimizer_lr=1e-5 --policy.optimizer_lr_backbone=1e-5"
-COMMON="--policy.device=cuda --policy.push_to_hub=false --batch_size=32 --seed=1000 --steps=$STEPS --num_workers=4"
-
-# F/T Haptic-ACT
-python ft_maniskill/train/train_acthaptic.py --policy.type=acthaptic $ACT_FLAGS $COMMON \
-  --dataset.repo_id=local/peg-ft --dataset.root=$D/lerobot_ft_replan --output_dir=outputs/peg/haptic-act
-# ACT
-lerobot-train --policy.type=act $ACT_FLAGS $COMMON --dataset.repo_id=local/peg --dataset.root=$D/lerobot --output_dir=outputs/peg/act
-# BC: ACT without action chunking and without the CVAE
-lerobot-train --policy.type=act --policy.chunk_size=1 --policy.n_action_steps=1 --policy.n_obs_steps=1 --policy.use_vae=false \
-  --policy.vision_backbone=resnet18 --policy.pretrained_backbone_weights=ResNet18_Weights.IMAGENET1K_V1 \
-  --policy.optimizer_lr=1e-5 --policy.optimizer_lr_backbone=1e-5 $COMMON \
-  --dataset.repo_id=local/peg --dataset.root=$D/lerobot --output_dir=outputs/peg/bc
-# Diffusion Policy: LeRobot's defaults with a 420 x 420 crop
-lerobot-train --policy.type=diffusion --policy.n_obs_steps=2 --policy.horizon=16 --policy.n_action_steps=8 \
-  --policy.drop_n_last_frames=7 --policy.crop_shape="[420,420]" --policy.crop_is_random=true --policy.pretrained_backbone_weights=null \
-  --policy.use_group_norm=true --policy.use_separate_rgb_encoder_per_camera=false --policy.vision_backbone=resnet18 \
-  --policy.optimizer_lr=1e-4 --policy.scheduler_name=cosine --policy.scheduler_warmup_steps=500 $COMMON \
-  --dataset.repo_id=local/peg --dataset.root=$D/lerobot --output_dir=outputs/peg/dp
+D=data_ft/ft_maniskill/peg
+# Haptic-ACT with F/T (200k steps for peg, 150k for pickcube and stackcube, 60k for pushcube)
+python ft_maniskill/train/train_acthaptic.py --policy.type=acthaptic --policy.device=cuda --policy.push_to_hub=false \
+  --dataset.repo_id=local/peg-ft --dataset.root=$D/lerobot_ft_replan --output_dir=outputs/peg/haptic-act \
+  --steps=200000 --batch_size=32 --seed=1000 --policy.chunk_size=100 --policy.n_action_steps=50 --policy.kl_weight=10 \
+  --policy.pretrained_backbone_weights=ResNet18_Weights.IMAGENET1K_V1 --policy.optimizer_lr=1e-5 --policy.optimizer_lr_backbone=1e-5
+# evaluation: 10 seeds x 25 episodes, writes summary.json
+python ft_maniskill/eval/eval_ft.py --task peg --policy-path $D/models/haptic-act --n-action-steps 50 --learned-trigger 0.5 \
+  --out outputs/eval/peg/haptic-act
 ```
 
-### 8.5 Evaluation
-
-`eval_ft.py` evaluates a checkpoint with the protocol of the results below: for each seed k in 1000, 2000, …, 10000, 25 episodes with environment seeds k … k+24 and the policy seeded with k. An episode succeeds if the task reports success before it ends; the step caps are 450 (PegInsertionSide), 150 (StackCube) and 100 (PickCube, PushCube). It writes the per-seed results and `summary.json`.
-
-```bash
-M=data_ft/ft_maniskill/peg/models
-python ft_maniskill/eval/eval_ft.py --task peg --policy-path $M/haptic-act --n-action-steps 50 --learned-trigger 0.5 --out outputs/eval/peg/haptic-act
-python ft_maniskill/eval/eval_ft.py --task peg --policy-path $M/act --n-action-steps 50 --out outputs/eval/peg/act
-python ft_maniskill/eval/eval_ft.py --task peg --policy-path $M/dp --num-inference-steps 50 --out outputs/eval/peg/dp
-python ft_maniskill/eval/eval_ft.py --task peg --policy-path $M/bc --n-action-steps 1 --out outputs/eval/peg/bc
-```
-
-`--task` is one of `peg`, `pickcube`, `stackcube`, `pushcube`; `--videos N` saves the first N episodes of each seed as mp4.
-
-### 8.6 Results
-
-Success rate (%) after training has stabilised: for each seed, the mean over the last 10 evaluated checkpoints, then mean ± std over the 10 seeds (250 episodes per checkpoint). Mean: the success averaged over the four tasks per seed.
-
-| Method | PegInsertionSide | PickCube | StackCube | PushCube | Mean |
-|---|---:|---:|---:|---:|---:|
-| Haptic-ACT (F/T) | **70.2 ± 4.8** | 79.2 ± 4.9 | 81.4 ± 8.4 | **100.0 ± 0.0** | **82.7 ± 2.2** |
-| ACT | 35.5 ± 7.8 | 76.4 ± 6.2 | 73.9 ± 7.3 | 99.8 ± 0.3 | 71.4 ± 2.7 |
-| Diffusion Policy | 56.5 ± 5.9 | **81.4 ± 5.0** | **89.4 ± 4.0** | 96.3 ± 1.3 | 80.9 ± 1.9 |
-| BC | 0.0 ± 0.0 | 8.9 ± 3.1 | 0.0 ± 0.0 | 16.3 ± 3.6 | 6.3 ± 1.2 |
-
-<p align="center">
-  <img src="ft_maniskill/results/act_vs_haptic_act.png" width="760" alt="Success rate over training of ACT and Haptic-ACT with F/T on the four tasks">
-</p>
-
-On the contact-rich peg insertion the F/T input doubles the success rate of ACT; on the three tasks without deliberate contact it matches or exceeds ACT. `ft_maniskill/results/<task>/<method>/<step>.json` holds the evaluation of every checkpoint; `ft_maniskill/analysis/make_table.py` and `plot_results.py` rebuild the table and the curves (`<task>_curves.png` with all four methods). The models on Hugging Face are, per task and method, the checkpoint with the highest success over the 10 seeds (for PushCube the last one, 60k).
+The baselines (ACT, Diffusion Policy, BC) train with `lerobot-train` on a copy of the dataset without the force columns, made by `ft_maniskill/dataset_processing/make_baseline_dataset.py`; their settings are in the `train_config.json` of each model. `ft_maniskill/dataset_processing/` also holds the scripts that compute the force columns from the recorded joint torques.
 
 ---
 

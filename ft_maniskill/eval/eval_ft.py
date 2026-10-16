@@ -49,6 +49,7 @@ TASKS = {
     "pickcube": ("PickCubeVisGoalThr3-v1", 100),
     "stackcube": ("StackCube-v1", 150),
     "pushcube": ("PushCube-v1", 100),
+    "plug_topdown": ("PlugChargerTopDown-v1", 600),
 }
 CAMERAS = {"base_camera": "base_camera", "hand_camera": "wrist_camera"}  # ManiSkill name -> dataset name
 IMAGE_SIZE = 480
@@ -72,6 +73,13 @@ def make_env(task: str, render_video: bool) -> gym.Env:
         max_episode_steps=max_steps,
     )
     return CPUGymWrapper(env, record_metrics=False)  # unbatched numpy observations
+
+
+def render_frame(env: gym.Env) -> np.ndarray:
+    """One RGB frame of the human-render camera, as an (H, W, 3) uint8 array."""
+    frame = env.render()
+    frame = frame.cpu().numpy() if torch.is_tensor(frame) else np.asarray(frame)
+    return frame[0] if frame.ndim == 4 else frame
 
 
 class ForceObserver:
@@ -172,7 +180,7 @@ def run_episode(env, policy, preprocessor, postprocessor, select, observer, seed
         steps += 1
         success = success or bool(info["success"])
         if video is not None:
-            video.append(env.render())
+            video.append(render_frame(env))
         if terminated or truncated or steps >= max_steps:
             return {"env_seed": seed, "success": success, "steps": steps}
 
