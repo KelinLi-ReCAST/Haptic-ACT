@@ -92,7 +92,7 @@ senseglove/
 real_robot/
   data_extract.py                        loader for the compressed real-robot HDF5 episodes
 media/readme/                            images used in this README
-ft_maniskill/                            Haptic-ACT with wrist force/torque in ManiSkill (§8)
+ft_maniskill/                            Haptic-ACT adapted to a force/torque sensor, in ManiSkill (§8)
   policy/lerobot_policy_acthaptic/       the policy, as a LeRobot plugin (--policy.type=acthaptic)
   train/train_acthaptic.py               lerobot-train entry point of the policy
   eval/eval_ft.py                        evaluation (10 seeds x 25 trials)
