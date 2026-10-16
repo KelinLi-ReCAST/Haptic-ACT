@@ -9,7 +9,7 @@
 
 Code for the paper [*Haptic-ACT: Bridging Human Intuition with Compliant Robotic Manipulation via Immersive VR*](https://arxiv.org/abs/2409.11925) (Kelin Li, Shubham M Wagh, Nitish Sharma, Saksham Bhadani, Wei Chen, Chang Liu and Petar Kormushev, IEEE/RSJ IROS 2025). Project page: [sites.google.com/view/hapticact](https://sites.google.com/view/hapticact).
 
-The repository contains the simulation side of the work: a MuJoCo model of the xArm7 arm with the Inspire dexterous hand, the scripted demonstrations of the pick-and-place task, the Haptic-ACT policy, and the original ACT as the baseline, both trained and evaluated on the same data. It also contains the SenseGlove interface, a MuJoCo teleoperation script driven by the glove, a Unity project that loads the MuJoCo scene, and a loader for the real-robot recordings.
+The repository contains the simulation side of the work: a MuJoCo model of the xArm7 arm with the Inspire dexterous hand, the demonstrations of the pick-and-place task, the Haptic-ACT policy, and the original ACT as the baseline, both trained and evaluated on the same data. It also contains the SenseGlove interface, a MuJoCo teleoperation script driven by the glove, a Unity project that loads the MuJoCo scene, and a loader for the real-robot recordings.
 
 Haptic-ACT extends [ACT](https://github.com/tonyzhaozh/act) (Action Chunking with Transformers) with the fingertip forces of the hand. The observation is the camera image, the 13 joint positions (7 arm, 6 hand) and the 5 fingertip forces; the output is a chunk of 13-d joint targets. In the code the forces enter the network twice: they are concatenated with the joint positions into an 18-d proprioceptive input of the transformer, and they are added as an extra token to the input of the CVAE encoder that computes the style variable during training.
 
@@ -17,7 +17,7 @@ Haptic-ACT extends [ACT](https://github.com/tonyzhaozh/act) (Action Chunking wit
   <img src="media/readme/haptic_act_flowchart.png" width="760" alt="Flowchart of Haptic-ACT: images, joint positions and fingertip forces are embedded and fed to the CVAE encoder and the transformer">
 </p>
 
-| Scripted demonstration (`frontview`) | Haptic-ACT rollout (`birdview`, `sideview`, `frontview`) |
+| Demonstration (`frontview`) | Haptic-ACT rollout (`birdview`, `sideview`, `frontview`) |
 |:---:|:---:|
 | ![demo](media/readme/sim_scripted_demo.gif) | ![haptic-act](media/readme/sim_haptic_act_rollout.gif) |
 
@@ -65,7 +65,7 @@ haptic_act/                              Haptic-ACT (images + joint positions + 
   ee_env_xarm.py                         MuJoCo env with end-effector (mocap) control, used by the scripted policy
   env_xarm.py                            MuJoCo env with joint position control, used for recording and evaluation
   scripted_policy_xarm.py                waypoint policy for pick-and-place
-  record_sim_episodes.py                 generates the scripted demonstrations (HDF5)
+  record_sim_episodes.py                 generates the demonstrations (HDF5)
   imitate_episodes.py                    training and evaluation
   policy.py                              ACTPolicy / CNNMLPPolicy wrappers
   utils.py                               episodic dataset, normalisation statistics, object pose sampling
@@ -202,7 +202,7 @@ Rollouts continue until 50 of them have reached the maximum reward. `--max_rollo
 
 ### Step 4: Compare the policies
 
-The comparison of the paper is made on the fingertip forces (in N, from the MuJoCo touch sensors `thumb_touch` … `pinky_touch`) of three sets of 50 successful episodes each: the scripted demonstrations (`force_demo.npy`, written in Step 1), Haptic-ACT (`force_hact.npy`) and ACT (`force_act.npy`).
+The comparison of the paper is made on the fingertip forces (in N, from the MuJoCo touch sensors `thumb_touch` … `pinky_touch`) of three sets of 50 successful episodes each: the demonstrations (`force_demo.npy`, written in Step 1), Haptic-ACT (`force_hact.npy`) and ACT (`force_act.npy`).
 
 ### Step 5 (optional): SenseGlove and MuJoCo teleoperation
 
