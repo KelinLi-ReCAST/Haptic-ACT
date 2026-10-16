@@ -100,7 +100,7 @@ ft_maniskill/                            Haptic-ACT adapted to a force/torque se
   requirements.txt                       Python 3.12 environment
 ```
 
-Datasets, checkpoints and evaluation logs are not in git; see §3.3.
+Datasets and checkpoints are on Hugging Face; see §3.3.
 
 ---
 
@@ -136,15 +136,19 @@ Offscreen rendering uses EGL (`MUJOCO_GL=egl` is set at the top of `imitate_epis
 
 ### 3.3 Data and checkpoints
 
-GitHub holds the code, the MuJoCo models and the media of this README. The following are not distributed, and `.gitignore` keeps them out of git:
+GitHub holds the code, the MuJoCo models and the media of this README. The demonstrations, checkpoints and real-robot recordings are on Hugging Face, in the dataset [KelinLiIC/Haptic-ACT](https://huggingface.co/datasets/KelinLiIC/Haptic-ACT) at the same paths as in this repository:
 
 | Path | Contents |
 |---|---|
-| `haptic_act/data/pick_and_place/raw_data/`, `act_baseline/data/...` | Simulated demonstrations, `episode_<i>.hdf5`. Regenerate them with Step 1 |
-| `haptic_act/ckpt/`, `act_baseline/ckpt/` | Checkpoints, `dataset_stats.pkl`, training curves, evaluation videos. Regenerate them with Steps 2–3 |
-| `data/force_{demo,hact,act}.npy` | Fingertip forces logged during recording and evaluation (§5) |
-| Real-robot recordings | Demonstrations with and without SenseGlove and rollouts of both policies (§6) |
-| `senseglove/glove_calibration/<user>.npy` | Per-user glove calibration, created in Step 5 |
+| `haptic_act/data/pick_and_place/raw_data/` | The 50 simulated demonstrations, `episode_<i>.hdf5` (§5). Step 1 generates new ones |
+| `haptic_act/ckpt/`, `act_baseline/ckpt/` | Haptic-ACT and ACT: `policy_best.ckpt`, `dataset_stats.pkl` and the training curves |
+| `real_robot/real_hact/`, `real_robot/real_act/` | Real-robot rollouts of Haptic-ACT and ACT, 50 each (§6) |
+
+```bash
+hf download KelinLiIC/Haptic-ACT --repo-type dataset --local-dir . --include "haptic_act/*" --include "act_baseline/*" --include "real_robot/*"
+```
+
+ACT trains on the same demonstrations: point `DATA_DIR` in `act_baseline/constants.py` to `haptic_act/data` (Step 1). The real-robot demonstrations with and without the SenseGlove are in the dataset of [Immersive demonstrations](https://huggingface.co/datasets/KelinLiIC/Immersive-demonstrations) (`real_robot/`). Not distributed: the fingertip forces `data/force_{demo,hact,act}.npy` (written by Steps 1 and 3) and the per-user glove calibration `senseglove/glove_calibration/<user>.npy` (Step 5).
 
 ---
 
@@ -262,7 +266,7 @@ python simulation/scripts/keyboard_control_senseglove.py --username <name>   # a
 
 The real-robot experiments used the immersive VR setup of §1. The policies on the real robot use the same Haptic-ACT and ACT models, with two cameras (front and wrist) instead of one.
 
-The real-robot episodes are stored in a compressed variant of the format above, which `real_robot/data_extract.py` reads:
+The real-robot episodes are stored in a compressed variant of the format above, which `real_robot/data_extract.py` reads. The rollouts are on Hugging Face (§3.3):
 
 | Key | Content |
 |---|---|
