@@ -283,7 +283,7 @@ The real-robot episodes are stored in a compressed variant of the format above, 
 
 ---
 
-## 8. Haptic-ACT with wrist force/torque (ManiSkill)
+## 8. Adapt Haptic-ACT to force/torque sensor
 
 This version keeps the Haptic-ACT architecture and replaces the five fingertip forces with the 6-axis force/torque (F/T) at the wrist, for contact-rich manipulation. It is built on [LeRobot](https://github.com/huggingface/lerobot) 0.6.1 and runs in [ManiSkill](https://github.com/mani-skill/ManiSkill) with a Franka Panda and a wrist camera. The input is the wrench at the TCP over the last 5 steps, estimated from the joint torques (τ = Jᵀ F) and given to ACT's transformer encoder as an extra token; a re-planning head on that token lets the policy drop its current action chunk when it detects a jam. The code is in `ft_maniskill/`, the datasets and trained models are on [Hugging Face](https://huggingface.co/datasets/KelinLiIC/Haptic-ACT).
 
