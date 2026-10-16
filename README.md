@@ -305,7 +305,7 @@ pip install --extra-index-url https://download.pytorch.org/whl/cu128 -r ft_manis
 hf download KelinLiIC/Haptic-ACT --repo-type dataset --local-dir data_ft --include "ft_maniskill/*"
 ```
 
-The requirements install LeRobot, the policy plugin and the `haptic-act` branch of [KelinLi-ReCAST/ManiSkill](https://github.com/KelinLi-ReCAST/ManiSkill/tree/haptic-act), which adds the task variants used here (`PegInsertionSideFT-v1`, `PickCubeVisGoal-v1`, `PlugChargerTopDown-v1`; StackCube-v1 and PushCube-v1 are unchanged). The download holds, per task, the LeRobot dataset `ft_maniskill/<task>/lerobot_ft_replan/` (about 1000 demonstrations, 20 Hz, two 480 × 480 cameras, joint states, actions and the force columns) and the trained models `ft_maniskill/<task>/models/{haptic-act,act,dp,bc}/`. The PlugChargerTopDown dataset and models will be added.
+The requirements install LeRobot, the policy plugin and the `haptic-act` branch of [KelinLi-ReCAST/ManiSkill](https://github.com/KelinLi-ReCAST/ManiSkill/tree/haptic-act), which adds the task variants used here (`PegInsertionSideFT-v1`, `PickCubeVisGoal-v1`, `PlugChargerTopDown-v1`; StackCube-v1 and PushCube-v1 are unchanged). The download holds, per task, the LeRobot dataset `ft_maniskill/<task>/lerobot_ft/` (about 1000 demonstrations, 20 Hz, two 480 × 480 cameras, joint states, actions and the force columns) and the trained models `ft_maniskill/<task>/models/{haptic-act,act,dp,bc}/`. The PlugChargerTopDown dataset and models will be added.
 
 ### 8.2 Training and evaluation
 
@@ -313,7 +313,7 @@ The requirements install LeRobot, the policy plugin and the `haptic-act` branch 
 D=data_ft/ft_maniskill/peg
 # Haptic-ACT with F/T (200k steps for peg, 150k for pickcube and stackcube, 60k for pushcube)
 python ft_maniskill/train/train_acthaptic.py --policy.type=acthaptic --policy.device=cuda --policy.push_to_hub=false \
-  --dataset.repo_id=local/peg-ft --dataset.root=$D/lerobot_ft_replan --output_dir=outputs/peg/haptic-act \
+  --dataset.repo_id=local/peg-ft --dataset.root=$D/lerobot_ft --output_dir=outputs/peg/haptic-act \
   --steps=200000 --batch_size=32 --seed=1000 --policy.chunk_size=100 --policy.n_action_steps=50 --policy.kl_weight=10 \
   --policy.pretrained_backbone_weights=ResNet18_Weights.IMAGENET1K_V1 --policy.optimizer_lr=1e-5 --policy.optimizer_lr_backbone=1e-5
 # evaluation: 10 seeds x 25 episodes, writes summary.json
