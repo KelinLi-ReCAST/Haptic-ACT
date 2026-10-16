@@ -1,6 +1,6 @@
 """Evaluate a checkpoint (F/T Haptic-ACT, ACT, Diffusion Policy or BC) on one of the ManiSkill tasks.
 
-Protocol of the reported results: for every seed k in --seeds, the policy's random seed is set to k and 25 episodes
+Protocol: for every seed k in --seeds, the policy's random seed is set to k and 25 episodes
 are run with environment seeds k, k+1, ..., k+24. An episode counts as a success if the task reports success at any
 step before it ends (termination, truncation or the step cap). The result is the mean and standard deviation of the
 per-seed success rates, written to <out>/summary.json (per-episode results in <out>/seed<k>.json).
