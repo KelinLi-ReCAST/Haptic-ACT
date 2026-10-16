@@ -288,7 +288,7 @@ The real-robot episodes are stored in a compressed variant of the format above, 
 
 ## 8. Haptic-ACT with wrist force/torque (ManiSkill)
 
-This version keeps the Haptic-ACT architecture and replaces the five fingertip forces with the 6-axis force/torque (F/T) at the robot's wrist, which any arm with a wrist F/T sensor provides, and targets contact-rich manipulation. It is implemented on [LeRobot](https://github.com/huggingface/lerobot) 0.6.1 and evaluated in [ManiSkill](https://github.com/mani-skill/ManiSkill) on a Franka Panda with a wrist camera, against ACT, Diffusion Policy and BC trained on the same demonstrations. The code is in `ft_maniskill/`; the datasets and the trained models are on Hugging Face ([datasets](https://huggingface.co/datasets/KelinLiIC/Haptic-ACT), [models](https://huggingface.co/KelinLiIC/Haptic-ACT)).
+This version keeps the Haptic-ACT architecture and replaces the five fingertip forces with the 6-axis force/torque (F/T) at the robot's wrist, which any arm with a wrist F/T sensor provides, and targets contact-rich manipulation. It is implemented on [LeRobot](https://github.com/huggingface/lerobot) 0.6.1 and evaluated in [ManiSkill](https://github.com/mani-skill/ManiSkill) on a Franka Panda with a wrist camera, against ACT, Diffusion Policy and BC trained on the same demonstrations. The code is in `ft_maniskill/`; the datasets and the trained models are on [Hugging Face](https://huggingface.co/datasets/KelinLiIC/Haptic-ACT), in `ft_maniskill/<task>/lerobot_ft_replan/` and `ft_maniskill/<task>/models/<method>/`.
 
 ### 8.1 Method
 
@@ -331,11 +331,10 @@ python ft_maniskill/dataset_processing/make_baseline_dataset.py <task>/lerobot_f
 ```bash
 python3.12 -m venv .venv-ft && source .venv-ft/bin/activate
 pip install --extra-index-url https://download.pytorch.org/whl/cu128 -r ft_maniskill/requirements.txt
-hf download KelinLiIC/Haptic-ACT --repo-type dataset --local-dir data_ft --include "ft_maniskill/*"   # datasets
-hf download KelinLiIC/Haptic-ACT --local-dir models_ft --include "ft_maniskill/*"                       # trained models
+hf download KelinLiIC/Haptic-ACT --repo-type dataset --local-dir data_ft --include "ft_maniskill/*"   # datasets and trained models
 ```
 
-The requirements install LeRobot 0.6.1, the ManiSkill fork and the policy plugin. Rendering uses Vulkan (see the ManiSkill installation notes).
+To download only the datasets or only the models, use `--include "ft_maniskill/*/lerobot_ft_replan/*"` or `--include "ft_maniskill/*/models/*"`. The requirements install LeRobot 0.6.1, the ManiSkill fork and the policy plugin. Rendering uses Vulkan (see the ManiSkill installation notes).
 
 ### 8.4 Training
 
@@ -371,7 +370,7 @@ lerobot-train --policy.type=diffusion --policy.n_obs_steps=2 --policy.horizon=16
 `eval_ft.py` evaluates a checkpoint with the protocol of the results below: for each seed k in 1000, 2000, …, 10000, 25 episodes with environment seeds k … k+24 and the policy seeded with k. An episode succeeds if the task reports success before it ends; the step caps are 450 (PegInsertionSide), 150 (StackCube) and 100 (PickCube, PushCube). It writes the per-seed results and `summary.json`.
 
 ```bash
-M=models_ft/ft_maniskill/peg
+M=data_ft/ft_maniskill/peg/models
 python ft_maniskill/eval/eval_ft.py --task peg --policy-path $M/haptic-act --n-action-steps 50 --learned-trigger 0.5 --out outputs/eval/peg/haptic-act
 python ft_maniskill/eval/eval_ft.py --task peg --policy-path $M/act --n-action-steps 50 --out outputs/eval/peg/act
 python ft_maniskill/eval/eval_ft.py --task peg --policy-path $M/dp --num-inference-steps 50 --out outputs/eval/peg/dp
