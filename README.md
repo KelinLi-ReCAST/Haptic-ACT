@@ -350,7 +350,7 @@ COMMON="--policy.device=cuda --policy.push_to_hub=false --batch_size=32 --seed=1
 
 # F/T Haptic-ACT
 python ft_maniskill/train/train_acthaptic.py --policy.type=acthaptic $ACT_FLAGS $COMMON \
-  --dataset.repo_id=local/peg-ft --dataset.root=$D/lerobot_ft_replan --output_dir=outputs/peg/ft
+  --dataset.repo_id=local/peg-ft --dataset.root=$D/lerobot_ft_replan --output_dir=outputs/peg/haptic-act
 # ACT
 lerobot-train --policy.type=act $ACT_FLAGS $COMMON --dataset.repo_id=local/peg --dataset.root=$D/lerobot --output_dir=outputs/peg/act
 # BC: ACT without action chunking and without the CVAE
@@ -372,7 +372,7 @@ lerobot-train --policy.type=diffusion --policy.n_obs_steps=2 --policy.horizon=16
 
 ```bash
 M=models_ft/ft_maniskill/peg
-python ft_maniskill/eval/eval_ft.py --task peg --policy-path $M/ft --n-action-steps 50 --learned-trigger 0.5 --out outputs/eval/peg/ft
+python ft_maniskill/eval/eval_ft.py --task peg --policy-path $M/haptic-act --n-action-steps 50 --learned-trigger 0.5 --out outputs/eval/peg/haptic-act
 python ft_maniskill/eval/eval_ft.py --task peg --policy-path $M/act --n-action-steps 50 --out outputs/eval/peg/act
 python ft_maniskill/eval/eval_ft.py --task peg --policy-path $M/dp --num-inference-steps 50 --out outputs/eval/peg/dp
 python ft_maniskill/eval/eval_ft.py --task peg --policy-path $M/bc --n-action-steps 1 --out outputs/eval/peg/bc

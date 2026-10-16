@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 
 RESULTS = Path(__file__).resolve().parents[1] / "results"
-METHODS = [("ft", "Haptic-ACT (F/T)", "#d62728"), ("act", "ACT", "#1f77b4"),
+METHODS = [("haptic-act", "Haptic-ACT (F/T)", "#d62728"), ("act", "ACT", "#1f77b4"),
            ("dp", "Diffusion Policy (50 DDPM steps)", "#2ca02c"), ("bc", "BC (single-step ACT)", "#7f7f7f")]
 TASKS = [("peg", "PegInsertionSide (contact-rich)"), ("pushcube", "PushCube"), ("stackcube", "StackCube"), ("pickcube", "PickCube")]
 
@@ -29,7 +29,7 @@ def curve(task: str, method: str):
 def draw(ax, task: str, methods):
     for method, label, color in methods:
         x, mean, std = curve(task, method)
-        ax.plot(x, mean, "-o", color=color, lw=2, ms=3, label=label, zorder=4 if method == "ft" else 3)
+        ax.plot(x, mean, "-o", color=color, lw=2, ms=3, label=label, zorder=4 if method == "haptic-act" else 3)
         ax.fill_between(x, np.clip(mean - std, 0, 100), np.clip(mean + std, 0, 100), color=color, alpha=0.15, lw=0)
     ax.set_ylim(-2, 102)
     ax.grid(alpha=0.3)
@@ -52,7 +52,7 @@ def main():
         plt.close(fig)
     fig, axes = plt.subplots(2, 2, figsize=(10, 7))
     for ax, (task, title) in zip(axes.flat, TASKS):
-        draw(ax, task, [m for m in METHODS if m[0] in ("act", "ft")][::-1])
+        draw(ax, task, [m for m in METHODS if m[0] in ("act", "haptic-act")][::-1])
         ax.set_title(title)
     axes[0, 0].legend(loc="lower right", fontsize=9)
     fig.suptitle("Effect of the force input: ACT vs Haptic-ACT (F/T), 10 seeds x 25 trials per checkpoint")

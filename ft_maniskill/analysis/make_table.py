@@ -12,7 +12,7 @@ import statistics as st
 from pathlib import Path
 
 RESULTS = Path(__file__).resolve().parents[1] / "results"
-METHODS = [("ft", "Haptic-ACT (F/T)"), ("act", "ACT"), ("dp", "Diffusion Policy"), ("bc", "BC")]
+METHODS = [("haptic-act", "Haptic-ACT (F/T)"), ("act", "ACT"), ("dp", "Diffusion Policy"), ("bc", "BC")]
 TASKS = [("peg", "PegInsertionSide"), ("pickcube", "PickCube"), ("stackcube", "StackCube"), ("pushcube", "PushCube")]
 
 
