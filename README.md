@@ -305,7 +305,7 @@ This version keeps the Haptic-ACT architecture and replaces the five fingertip f
 |:---:|:---:|
 | ![real plug charger](media/readme/real_ft_plugcharger.gif) | ![real battery](media/readme/real_ft_battery.gif) |
 
-*Real-robot demonstrations on the xArm7 with the xArm gripper and a wrist F/T sensor: front camera (left) and the change of the measured force from the start of the episode (right), real time. The data are on Hugging Face in `real_robot/plugchargerdemo-lerobot/` and `real_robot/batterydemo-lerobot/` (LeRobot format).*
+*Real-robot experiments on the xArm7 with the xArm gripper and a wrist F/T sensor: front camera (left) and the change of the measured force (N) from the start of the episode (right), real time. The data are on Hugging Face in `real_robot/plugchargerdemo-lerobot/` and `real_robot/batterydemo-lerobot/` (LeRobot format).*
 
 ### 8.1 Setup
 
